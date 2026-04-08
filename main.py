@@ -1,7 +1,6 @@
 #cad2nza/Spring26COMP1020A8
 
 import math
-import os
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
@@ -24,45 +23,72 @@ class SpritePreview(QMainWindow):
         self.num_frames = 21
         self.frames = load_sprite('spriteImages', self.num_frames)
 
+        self.current_frame = 0
+        self.is_running = False
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.next_frame)
+
         self.setupUI()
 
     def setupUI(self):
         frame = QFrame()
         layout = QVBoxLayout()
-
-
+#sprite
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-
-        if self.frames:
-            self.label.setPixmap(self.frames[0].scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio))
-
+        self.update_frame_display()
         layout.addWidget(self.label)
-
-
+#FPS Label
+        self.fps_label = QLabel("FPS: 1")
+        self.fps_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.fps_label)
+#Slider
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(self.num_frames - 1)
-
-
-        self.lcd = QLCDNumber()
-        self.lcd.setMinimumHeight(60)
-
-
-        self.slider.valueChanged.connect(self.update_frame)
-        self.slider.valueChanged.connect(self.lcd.display)
-
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(100)
+        self.slider.setValue(1)
+#Ticks
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.slider.setTickInterval(5)
+#slider value change signal
+        self.slider.valueChanged.connect(self.update_fps)
         layout.addWidget(self.slider)
-        layout.addWidget(self.lcd)
+#start/stop button
+        self.button = QPushButton("Start")
+        self.button.clicked.connect(self.toggle_animation)
+        layout.addWidget(self.button)
 
         frame.setLayout(layout)
         self.setCentralWidget(frame)
 
+    def next_frame(self):
+        self.current_frame = (self.current_frame + 1) % self.num_frames
+        self.update_frame_display()
 
-    def update_frame(self, value):
-        pixmap = self.frames[value]
+    def update_frame_display(self):
+        pixmap = self.frames[self.current_frame]
         self.label.setPixmap(pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio))
+
+    def update_fps(self, value):
+        self.fps_label.setText(f"FPS: {value}")
+
+        if self.is_running:
+            interval = int(1000 / value)  # milliseconds per frame
+            self.timer.start(interval)
+
+    def toggle_animation(self):
+        if not self.is_running:
+            fps = self.slider.value()
+            interval = int(1000 / fps)
+
+            self.timer.start(interval)
+            self.button.setText("Stop")
+            self.is_running = True
+        else:
+            self.timer.stop()
+            self.button.setText("Start")
+            self.is_running = False
 
 
 def main():
