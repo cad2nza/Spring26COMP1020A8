@@ -1,6 +1,7 @@
 #cad2nza/Spring26COMP1020A8
 
 import math
+import sys
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
@@ -33,7 +34,7 @@ class SpritePreview(QMainWindow):
 
     def setupUI(self):
         frame = QFrame()
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
 #sprite
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -43,22 +44,40 @@ class SpritePreview(QMainWindow):
         self.fps_label = QLabel("FPS: 1")
         self.fps_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.fps_label)
-#Slider
-        self.slider = QSlider(Qt.Orientation.Horizontal)
+# slider
+        self.slider = QSlider(Qt.Orientation.Vertical)
         self.slider.setMinimum(1)
         self.slider.setMaximum(100)
         self.slider.setValue(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksLeft)  # ticks on the left side
+        self.slider.setTickInterval(5)
+        self.slider.valueChanged.connect(self.update_fps)
+        layout.addWidget(self.slider)
 #Ticks
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.setTickInterval(5)
 #slider value change signal
         self.slider.valueChanged.connect(self.update_fps)
         layout.addWidget(self.slider)
-#start/stop button
-        self.button = QPushButton("Start")
-        self.button.clicked.connect(self.toggle_animation)
-        layout.addWidget(self.button)
 
+        button_layout = QVBoxLayout()
+#start/stop button
+        self.start_button = QPushButton("Start")
+        self.start_button.clicked.connect(self.toggle_animation)
+        button_layout.addWidget(self.start_button)
+
+        frame.setLayout(layout)
+        self.setCentralWidget(frame)
+#pause button
+        self.pause_button = QPushButton("Pause")
+        self.pause_button.clicked.connect(self.pause_animation)
+        button_layout.addWidget(self.pause_button)
+#exit button
+        self.exit_button = QPushButton("Exit")
+        self.exit_button.clicked.connect(self.exit)
+        button_layout.addWidget(self.exit_button)
+
+        layout.addLayout(button_layout)
         frame.setLayout(layout)
         self.setCentralWidget(frame)
 
@@ -83,12 +102,23 @@ class SpritePreview(QMainWindow):
             interval = int(1000 / fps)
 
             self.timer.start(interval)
-            self.button.setText("Stop")
+            self.start_button.setText("Stop")
             self.is_running = True
         else:
             self.timer.stop()
-            self.button.setText("Start")
+            self.start_button.setText("Start")
             self.is_running = False
+            self.current_frame = 0
+            self.update_frame_display()
+
+    def pause_animation(self):
+        if self.is_running:
+            self.timer.stop()
+            self.start_button.setText("Start")
+            self.is_running = False
+
+    def exit(self):
+        sys.exit()
 
 
 def main():
