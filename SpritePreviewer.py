@@ -1,3 +1,5 @@
+#cad2nza/Spring26COMP1020A8
+
 import math
 
 from PyQt6.QtGui import *
